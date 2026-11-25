@@ -30,6 +30,17 @@ public final class SemiImplicitEulerIntegrator implements MotionIntegrator {
      */
     @Override
     public MotionSample step(SpringParameters parameters, MotionSample current, double stepSeconds) {
-        throw new UnsupportedOperationException("TODO：计算下一步弹簧状态");
+        double mass = SpringParameters.MASS_KILOGRAMS;
+        double stiffness = parameters.stiffnessNewtonsPerMeter();
+        double damping = parameters.dampingNewtonSecondsPerMeter();
+        double displacement = current.displacementMeters();
+        double velocity = current.velocityMetersPerSecond();
+        double dt = stepSeconds;
+
+        double acceleration = (-stiffness * displacement - damping * velocity) / mass;
+        double nextVelocity = velocity + acceleration * dt;
+        double nextDisplacement = displacement + nextVelocity * dt;
+
+        return new MotionSample(current.timeSeconds() + dt, nextDisplacement, nextVelocity);
     }
 }
