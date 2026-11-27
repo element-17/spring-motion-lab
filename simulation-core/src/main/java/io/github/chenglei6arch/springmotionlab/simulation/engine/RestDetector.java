@@ -24,13 +24,22 @@ final class RestDetector {
     /** 由达标时长和每秒步数换算得到的最少步数，向上取整。 */
     static final int REQUIRED_STEPS = Math.ceilDiv(REST_DURATION_MILLIS * SpringSimulator.STEPS_PER_SECOND, 1_000);
 
+    /** 连续同时满足位移与速度阈值的步数，任一项不达标时归零。 */
+    private int consecutiveSteps;
+
     /**
      * 观察一个采样并更新连续达标步数。该方法只更新计数，无返回值。
      *
      * @param sample 仿真器完成当前时间步后得到的运动采样
      */
     void observe(MotionSample sample) {
-        // TODO 1–2 使用位移、速度的绝对值更新连续达标步数。
+        boolean displacementCloseToZero = Math.abs(sample.displacementMeters()) < DISPLACEMENT_TOLERANCE_METERS;
+        boolean speedCloseToZero = Math.abs(sample.velocityMetersPerSecond()) < SPEED_TOLERANCE_METERS_PER_SECOND;
+        if (displacementCloseToZero && speedCloseToZero) {
+            consecutiveSteps = consecutiveSteps + 1;
+        } else {
+            consecutiveSteps = 0;
+        }
     }
 
     /**
@@ -39,7 +48,6 @@ final class RestDetector {
      * @return 连续达标至少达到 {@code REQUIRED_STEPS} 步时返回 {@code true}，否则返回 {@code false}
      */
     boolean isSettled() {
-        // TODO 3 根据连续达标步数返回静止结果。
-        return false;
+        return consecutiveSteps >= REQUIRED_STEPS;
     }
 }
